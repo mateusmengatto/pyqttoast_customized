@@ -13,7 +13,7 @@ from .constants import *
 class Toast(QDialog):
 
     # Static attributes
-    __maximum_on_screen = 3
+    __maximum_on_screen = 10
     __spacing = 10
     __offset_x = 20
     __offset_y = 45
@@ -149,7 +149,7 @@ class Toast(QDialog):
         # Timer for hiding the notification after set duration
         self.__duration_timer = QTimer(self)
         self.__duration_timer.setSingleShot(True)
-        self.__duration_timer.timeout.connect(self.hide)
+        self.__duration_timer.timeout.connect(self.isResetDurationOnHover)
 
         # Timer for updating the duration bar
         self.__duration_bar_timer = QTimer(self)
@@ -2261,7 +2261,7 @@ class Toast(QDialog):
          to defaults, hide all toasts instantly, and clear queue)"""
 
         # Reset static attributes
-        Toast.__maximum_on_screen = 3
+        Toast.__maximum_on_screen = 10
         Toast.__spacing = 10
         Toast.__offset_x = 20
         Toast.__offset_y = 45
