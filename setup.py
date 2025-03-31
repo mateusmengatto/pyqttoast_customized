@@ -7,8 +7,8 @@ with open('README.md', 'r') as fh:
 setup(
     name='pyqt-toast-notification-customm',
     version='1.)',
-    author='Niklas Henning || co-modification: Mateus Mengatto',
-    author_email='business@niklashenning.com  || co-modification: 'mateusmengatto_gmail.com',
+    author='Niklas Henning, Mateus Mengatto',
+    author_email='business@niklashenning.com, mateusmengatto_gmail.com',
     license='MIT',
     packages=find_namespace_packages(where='src'),
     package_dir={'': 'src'},
@@ -24,7 +24,7 @@ setup(
     description='A fully customizable toast notification library for PyQt and PySide',
     long_description=readme,
     long_description_content_type='text/markdown',
-    url='https://github.com/niklashenning/pyqttoast',
+    url='https://github.com/niklashenning/pyqttoast_customized',
     keywords=['python', 'pyqt', 'qt', 'toast', 'notification'],
     classifiers=[
         'Programming Language :: Python :: 3',
