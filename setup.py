@@ -5,10 +5,10 @@ with open('README.md', 'r') as fh:
     readme = '\n' + fh.read()
 
 setup(
-    name='pyqt-toast-notification',
-    version='1.3.2',
-    author='Niklas Henning',
-    author_email='business@niklashenning.com',
+    name='pyqt-toast-notification-customm',
+    version='1.)',
+    author='Niklas Henning || co-modification: Mateus Mengatto',
+    author_email='business@niklashenning.com  || co-modification: 'mateusmengatto_gmail.com',
     license='MIT',
     packages=find_namespace_packages(where='src'),
     package_dir={'': 'src'},
