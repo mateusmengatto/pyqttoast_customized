@@ -2,7 +2,7 @@ import math
 from qtpy.QtGui import QGuiApplication, QScreen
 from qtpy.QtCore import Qt, QPropertyAnimation, QPoint, QTimer, QSize, QMargins, QRect, Signal
 from qtpy.QtGui import QPixmap, QIcon, QFont, QFontMetrics
-from qtpy.QtWidgets import QDialog, QPushButton, QLabel, QGraphicsOpacityEffect, QWidget
+from qtpy.QtWidgets import QDialog, QPushButton, QLabel, QGraphicsOpacityEffect, QWidget, QVBoxLayout
 from .toast_enums import ToastPreset, ToastIcon, ToastPosition, ToastButtonAlignment
 from .os_utils import OSUtils
 from .icon_utils import IconUtils
@@ -28,8 +28,10 @@ class Toast(QDialog):
 
     # Close event
     closed = Signal()
+    notification_status_id = Signal(int, str)
+    
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None, notification_id = None):
         """Create a new Toast instance
 
         :param parent: the parent widget
@@ -72,6 +74,10 @@ class Toast(QDialog):
         self.__text_section_margins = QMargins(0, 0, 15, 0)
         self.__close_button_margins = QMargins(0, -8, 0, -8)
         self.__text_section_spacing = 8
+
+        '''Modified version by:Mateus Mengatto'''
+        self.__notification_id = notification_id
+        self.__notification_status = "novo"
 
         self.__elapsed_time = 0
         self.__fading_out = False
@@ -156,7 +162,9 @@ class Toast(QDialog):
         self.__duration_bar_timer.timeout.connect(self.__update_duration_bar)
 
         # Apply stylesheet
-        self.setStyleSheet(open(OSUtils.get_current_directory() + '/css/toast.css').read())
+        with open(OSUtils.get_current_directory() + '/css/toast.css', 'r', encoding='cp1252') as file:
+            self.setStyleSheet(file.read())
+        # self.setStyleSheet(open(OSUtils.get_current_directory() + '/css/toast.css').read())
 
         # Install event filter on widget if position relative to widget and moving with widget
         if Toast.__position_relative_to_widget and Toast.__move_position_with_widget:
@@ -274,12 +282,21 @@ class Toast(QDialog):
 
     def hide(self):
         """Start hiding process of the toast notification"""
+        self.minimenu = CloseMiniMenu()
+        self.minimenu.variable_signal.connect(self.finish_hiding_notification)
+        button_pos = self.__close_button.mapToGlobal(QPoint(0, 0))
+        self.minimenu.show_menu(button_pos)
+
+
+    def finish_hiding_notification(self, var):
+        self.__notification_status = var
 
         if not self.__fading_out:
             self.__fading_out = True
             if self.__duration != 0:
                 self.__duration_timer.stop()
             self.__fade_out()
+        
 
     def __fade_out(self):
         """Start the fade out animation"""
@@ -303,6 +320,7 @@ class Toast(QDialog):
 
             # Emit signal
             self.closed.emit()
+            self.notification_status_id.emit(self.__notification_id, self.__notification_status)
 
             # Update every other currently shown notification
             for toast in Toast.__currently_shown:
@@ -846,6 +864,13 @@ class Toast(QDialog):
         if self.__used:
             return
         self.__duration = duration
+
+    def setNotificationId(self, id: int):
+        """customization
+
+        :param id: int num of notification to set seen
+        """
+        self.__notification_id = id
 
     def isShowDurationBar(self) -> bool:
         """Get whether the duration bar is enabled
@@ -2278,3 +2303,44 @@ class Toast(QDialog):
 
         Toast.__currently_shown.clear()
         Toast.__queue.clear()
+
+
+
+class CloseMiniMenu(QWidget):
+    # Define signals for each button action
+    variable_signal = Signal(str)
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
+        self.setWindowModality(Qt.NonModal)
+
+        # Create buttons for each action
+        self.close_button = QPushButton("Novo")
+        self.remind_me_button = QPushButton("Aberto")
+        self.keep_on_button = QPushButton("Concluído")
+        #'novo', 'aberto', 'espera', 'concluido'
+        # Connect each button to its respective signal
+        self.close_button.clicked.connect(lambda: self.emit_variable("novo"))
+        self.remind_me_button.clicked.connect(lambda: self.emit_variable("aberto"))
+        self.keep_on_button.clicked.connect(lambda: self.emit_variable("concluido"))
+
+        # Layout to arrange buttons vertically
+        layout = QVBoxLayout()
+        layout.addWidget(self.close_button)
+        layout.addWidget(self.remind_me_button)
+        layout.addWidget(self.keep_on_button)
+        self.setLayout(layout)
+
+    def emit_variable(self, variable):
+        self.variable_signal.emit(variable)
+        self.close()
+
+    def show_menu(self, pos: QPoint):
+        # Display the menu at the specified screen position
+        self.adjustSize()
+        x = pos.x() - self.width()
+        y = pos.y() - self.height()
+        
+        self.move(x, y)
+        self.show()
